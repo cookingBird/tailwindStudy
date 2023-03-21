@@ -1,19 +1,24 @@
 import fs from 'fs'
 import path from 'path'
 
-function isObject(value) {
+function isObject (value) {
   return typeof value === 'object' && value !== null
 }
 
-function isEmpty(obj) {
+function isEmpty (obj) {
   return Object.keys(obj).length === 0
 }
 
-function isString(value) {
+function isString (value) {
   return typeof value === 'string' || value instanceof String
 }
 
-export default function resolveConfigPath(pathOrConfig) {
+/**
+ * @description 读取用户配置的tailwind.config.js文件
+ * @param {*} pathOrConfig
+ * @returns
+ */
+export default function resolveConfigPath (pathOrConfig) {
   // require('tailwindcss')({ theme: ..., variants: ... })
   if (isObject(pathOrConfig) && pathOrConfig.config === undefined && !isEmpty(pathOrConfig)) {
     return null

@@ -21,7 +21,8 @@
   },
   "scripts": {
     "dev": "concurrently -n tailwind,oxide-node -c green,yellow 'npm run dev:js' 'npm run dev:rust'",
-    "build": "npm run build:rust && npm run build:js && npm run build:peers",
+    "build:rust": "npm run build:rust && npm run build:js && npm run build:peers",
+    "build": "npm run build:js && npm run build:peers",
     "test": "jest",
     "test:integrations": "npm run test -w ./integrations",
     "style": "eslint .",

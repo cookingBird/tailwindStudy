@@ -3,14 +3,19 @@ import path from 'path'
 import resolve from 'resolve'
 import detective from 'detective'
 
-function createModule(file) {
+function createModule (file) {
   const source = fs.readFileSync(file, 'utf-8')
   const requires = detective(source)
 
   return { file, requires }
 }
 
-export default function getModuleDependencies(entryFile) {
+/**
+ * @description 分析用户配置文件中的本地依赖（排除了node_modules文件夹）
+ * @param {object} entryFile 用户配置tailwind.config.js内容
+ * @returns {array=[localConfigDep,...localDeps]}
+ */
+export default function getModuleDependencies (entryFile) {
   const rootModule = createModule(entryFile)
   const modules = [rootModule]
 
@@ -18,11 +23,11 @@ export default function getModuleDependencies(entryFile) {
   // ones are being added
   for (const mdl of modules) {
     mdl.requires
-      .filter((dep) => {
+      .filter(dep => {
         // Only track local modules, not node_modules
         return dep.startsWith('./') || dep.startsWith('../')
       })
-      .forEach((dep) => {
+      .forEach(dep => {
         try {
           const basedir = path.dirname(mdl.file)
           const depPath = resolve.sync(dep, { basedir })

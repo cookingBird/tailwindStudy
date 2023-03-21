@@ -11,8 +11,19 @@ import detectNesting from './lib/detectNesting'
 import { createContext } from './lib/setupContextUtils'
 import { issueFlagNotices } from './featureFlags'
 
-export default function processTailwindFeatures(setupContext) {
+/**
+ *
+ * @description 这是一个postcss插件
+ * @param {*} setupContext
+ * @returns
+ */
+export default function processTailwindFeatures (setupContext) {
   return function (root, result) {
+    /**
+     * ! 通过postcss找出@tailwind @layer @apply指令;并生成对应的存储结构（Set）
+     * @param {set} tailwindDirectives
+     * @param {set} applyDirectives
+     */
     let { tailwindDirectives, applyDirectives } = normalizeTailwindDirectives(root)
 
     detectNesting()(root, result)
@@ -20,18 +31,18 @@ export default function processTailwindFeatures(setupContext) {
     // Partition apply rules that are found in the css
     // itself.
     partitionApplyAtRules()(root, result)
-
+    // !根据tailwind指令注冊上下文
     let context = setupContext({
       tailwindDirectives,
       applyDirectives,
-      registerDependency(dependency) {
+      registerDependency (dependency) {
         result.messages.push({
           plugin: 'tailwindcss',
           parent: result.opts.from,
           ...dependency,
         })
       },
-      createContext(tailwindConfig, changedContent) {
+      createContext (tailwindConfig, changedContent) {
         return createContext(tailwindConfig, changedContent, root)
       },
     })(root, result)

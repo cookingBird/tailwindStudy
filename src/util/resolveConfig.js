@@ -11,11 +11,11 @@ import { parseColorFormat } from './pluginUtils'
 import { withAlphaValue } from './withAlphaVariable'
 import toColorValue from './toColorValue'
 
-function isFunction(input) {
+function isFunction (input) {
   return typeof input === 'function'
 }
 
-function mergeWith(target, ...sources) {
+function mergeWith (target, ...sources) {
   let customizer = sources.pop()
 
   for (let source of sources) {
@@ -39,10 +39,10 @@ function mergeWith(target, ...sources) {
 
 const configUtils = {
   colors,
-  negative(scale) {
+  negative (scale) {
     // TODO: Log that this function isn't really needed anymore?
     return Object.keys(scale)
-      .filter((key) => scale[key] !== '0')
+      .filter(key => scale[key] !== '0')
       .reduce((negativeScale, key) => {
         let negativeValue = negateValue(scale[key])
 
@@ -53,9 +53,9 @@ const configUtils = {
         return negativeScale
       }, {})
   },
-  breakpoints(screens) {
+  breakpoints (screens) {
     return Object.keys(screens)
-      .filter((key) => typeof screens[key] === 'string')
+      .filter(key => typeof screens[key] === 'string')
       .reduce(
         (breakpoints, key) => ({
           ...breakpoints,
@@ -66,11 +66,11 @@ const configUtils = {
   },
 }
 
-function value(valueToResolve, ...args) {
+function value (valueToResolve, ...args) {
   return isFunction(valueToResolve) ? valueToResolve(...args) : valueToResolve
 }
 
-function collectExtends(items) {
+function collectExtends (items) {
   return items.reduce((merged, { extend }) => {
     return mergeWith(merged, extend, (mergedValue, extendValue) => {
       if (mergedValue === undefined) {
@@ -86,7 +86,7 @@ function collectExtends(items) {
   }, {})
 }
 
-function mergeThemes(themes) {
+function mergeThemes (themes) {
   return {
     ...themes.reduce((merged, theme) => defaults(merged, theme), {}),
 
@@ -96,7 +96,7 @@ function mergeThemes(themes) {
   }
 }
 
-function mergeExtensionCustomizer(merged, value) {
+function mergeExtensionCustomizer (merged, value) {
   // When we have an array of objects, we do want to merge it
   if (Array.isArray(merged) && isPlainObject(merged[0])) {
     return merged.concat(value)
@@ -116,7 +116,7 @@ function mergeExtensionCustomizer(merged, value) {
   return undefined
 }
 
-function mergeExtensions({ extend, ...theme }) {
+function mergeExtensions ({ extend, ...theme }) {
   return mergeWith(theme, extend, (themeValue, extensions) => {
     // The `extend` property is an array, so we need to check if it contains any functions
     if (!isFunction(themeValue) && !extensions.some(isFunction)) {
@@ -126,7 +126,7 @@ function mergeExtensions({ extend, ...theme }) {
     return (resolveThemePath, utils) =>
       mergeWith(
         {},
-        ...[themeValue, ...extensions].map((e) => value(e, resolveThemePath, utils)),
+        ...[themeValue, ...extensions].map(e => value(e, resolveThemePath, utils)),
         mergeExtensionCustomizer
       )
   })
@@ -137,7 +137,7 @@ function mergeExtensions({ extend, ...theme }) {
  * @param {string} key
  * @return {Iterable<string[] & {alpha: string | undefined}>}
  */
-function* toPaths(key) {
+function* toPaths (key) {
   let path = toPath(key)
 
   if (path.length === 0) {
@@ -163,7 +163,7 @@ function* toPaths(key) {
   }
 }
 
-function resolveFunctionKeys(object) {
+function resolveFunctionKeys (object) {
   // theme('colors.red.500 / 0.5') -> ['colors', 'red', '500 / 0', '5]
 
   const resolvePath = (key, defaultValue) => {
@@ -210,10 +210,10 @@ function resolveFunctionKeys(object) {
   }, {})
 }
 
-function extractPluginConfigs(configs) {
+function extractPluginConfigs (configs) {
   let allConfigs = []
 
-  configs.forEach((config) => {
+  configs.forEach(config => {
     allConfigs = [...allConfigs, config]
 
     const plugins = config?.plugins ?? []
@@ -222,7 +222,7 @@ function extractPluginConfigs(configs) {
       return
     }
 
-    plugins.forEach((plugin) => {
+    plugins.forEach(plugin => {
       if (plugin.__isOptionsFunction) {
         plugin = plugin()
       }
@@ -233,7 +233,7 @@ function extractPluginConfigs(configs) {
   return allConfigs
 }
 
-function resolveCorePlugins(corePluginConfigs) {
+function resolveCorePlugins (corePluginConfigs) {
   const result = [...corePluginConfigs].reduceRight((resolved, corePluginConfig) => {
     if (isFunction(corePluginConfig)) {
       return corePluginConfig({ corePlugins: resolved })
@@ -244,7 +244,7 @@ function resolveCorePlugins(corePluginConfigs) {
   return result
 }
 
-function resolvePluginLists(pluginLists) {
+function resolvePluginLists (pluginLists) {
   const result = [...pluginLists].reduceRight((resolved, pluginList) => {
     return [...resolved, ...pluginList]
   }, [])
@@ -252,7 +252,12 @@ function resolvePluginLists(pluginLists) {
   return result
 }
 
-export default function resolveConfig(configs) {
+/**
+ * @description 解析配置文件
+ * @param {*} configs
+ * @returns
+ */
+export default function resolveConfig (configs) {
   let allConfigs = [
     ...extractPluginConfigs(configs),
     {
@@ -265,11 +270,12 @@ export default function resolveConfig(configs) {
   return normalizeConfig(
     defaults(
       {
+        /** 内置核心插件 */
         theme: resolveFunctionKeys(
-          mergeExtensions(mergeThemes(allConfigs.map((t) => t?.theme ?? {})))
+          mergeExtensions(mergeThemes(allConfigs.map(t => t?.theme ?? {})))
         ),
-        corePlugins: resolveCorePlugins(allConfigs.map((c) => c.corePlugins)),
-        plugins: resolvePluginLists(configs.map((c) => c?.plugins ?? [])),
+        corePlugins: resolveCorePlugins(allConfigs.map(c => c.corePlugins)),
+        plugins: resolvePluginLists(configs.map(c => c?.plugins ?? [])),
       },
       ...allConfigs
     )

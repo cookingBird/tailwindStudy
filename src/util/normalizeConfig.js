@@ -1,7 +1,12 @@
 import { flagEnabled } from '../featureFlags'
 import log, { dim } from './log'
 
-export function normalizeConfig(config) {
+/**
+ * @description tailwind.config.js文件配置项校验
+ * @param {*} config
+ * @returns
+ */
+export function normalizeConfig (config) {
   // Quick structure validation
   /**
    * type FilePath = string
@@ -18,12 +23,12 @@ export function normalizeConfig(config) {
    *   }
    */
   let valid = (() => {
-    // `config.purge` should not exist anymore
+    //* `config.purge` should not exist anymore (not include v2)
     if (config.purge) {
       return false
     }
 
-    // `config.content` should exist
+    //* `config.content` should exist (only v3)
     if (!config.content) {
       return false
     }
@@ -38,7 +43,7 @@ export function normalizeConfig(config) {
 
     // When `config.content` is an array, it should consist of FilePaths or RawFiles
     if (Array.isArray(config.content)) {
-      return config.content.every((path) => {
+      return config.content.every(path => {
         // `path` can be a string
         if (typeof path === 'string') return true
 
@@ -60,7 +65,7 @@ export function normalizeConfig(config) {
       // Only `files`, `relative`, `extract`, and `transform` can exist in `config.content`
       if (
         Object.keys(config.content).some(
-          (key) => !['files', 'relative', 'extract', 'transform'].includes(key)
+          key => !['files', 'relative', 'extract', 'transform'].includes(key)
         )
       ) {
         return false
@@ -69,7 +74,7 @@ export function normalizeConfig(config) {
       // `config.content.files` should exist of FilePaths or RawFiles
       if (Array.isArray(config.content.files)) {
         if (
-          !config.content.files.every((path) => {
+          !config.content.files.every(path => {
             // `path` can be a string
             if (typeof path === 'string') return true
 
@@ -156,7 +161,7 @@ export function normalizeConfig(config) {
     let { blocklist } = config
 
     if (Array.isArray(blocklist)) {
-      if (blocklist.every((item) => typeof item === 'string')) {
+      if (blocklist.every(item => typeof item === 'string')) {
         return blocklist
       }
 

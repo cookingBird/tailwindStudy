@@ -16,7 +16,7 @@ let configPathCache = new LRU({ maxSize: 100 })
 
 let candidateFilesCache = new WeakMap()
 
-function getCandidateFiles(context, tailwindConfig) {
+function getCandidateFiles (context, tailwindConfig) {
   if (candidateFilesCache.has(context)) {
     return candidateFilesCache.get(context)
   }
@@ -26,21 +26,32 @@ function getCandidateFiles(context, tailwindConfig) {
   return candidateFilesCache.set(context, candidateFiles).get(context)
 }
 
+/**
+ * @typedef {object} newConfig tailwind.config.js文件配置
+ * @typedef {object} userConfigPath postcss插件配置
+ * @typedef {string} newHash 新的tailwind.config.js文件object-hash
+ * @typedef {array} newDeps 新的tailwind.config.js文件的内置依赖
+ * @description 获取tailwindcss配置，并设置缓存，生成objectHash
+ * @param {object} configOrPath
+ * @returns {array=[newConfig, userConfigPath, newHash, newDeps]}
+ */
 // Get the config object based on a path
-function getTailwindConfig(configOrPath) {
+function getTailwindConfig (configOrPath) {
+  // *默认读取tailwind.config.js文件 {object}
   let userConfigPath = resolveConfigPath(configOrPath)
 
   if (userConfigPath !== null) {
     let [prevConfig, prevConfigHash, prevDeps, prevModified] =
       configPathCache.get(userConfigPath) || []
-
-    let newDeps = getModuleDependencies(userConfigPath).map((dep) => dep.file)
+    //*获取用户配置及其本地依赖
+    let newDeps = getModuleDependencies(userConfigPath).map(dep => dep.file)
 
     let modified = false
     let newModified = new Map()
     for (let file of newDeps) {
       let time = fs.statSync(file).mtimeMs
       newModified.set(file, time)
+      //判断文件是否有修改
       if (!prevModified || !prevModified.has(file) || time > prevModified.get(file)) {
         modified = true
       }
@@ -55,9 +66,13 @@ function getTailwindConfig(configOrPath) {
     for (let file of newDeps) {
       delete require.cache[file]
     }
+    // *读取配置
     let newConfig = resolveConfig(require(userConfigPath))
+    // *校验配置
     newConfig = validateConfig(newConfig)
+    // *生成新文件hash
     let newHash = hash(newConfig)
+    // *缓存新配置文件
     configPathCache.set(userConfigPath, [newConfig, newHash, newDeps, newModified])
     return [newConfig, userConfigPath, newHash, newDeps]
   }
@@ -74,10 +89,12 @@ function getTailwindConfig(configOrPath) {
 
 // DISABLE_TOUCH = TRUE
 
-// Retrieve an existing context from cache if possible (since contexts are unique per
-// source path), or set up a new one (including setting up watchers and registering
-// plugins) then return it
-export default function setupTrackingContext(configOrPath) {
+/**
+ * @description Retrieve an existing context from cache if possible (since contexts are unique per source path), or set up a new one (including setting up watchers and registering plugins) then return it
+ * @param {*} configOrPath
+ * @returns
+ */
+export default function setupTrackingContext (configOrPath) {
   return ({ tailwindDirectives, registerDependency }) => {
     return (root, result) => {
       let [tailwindConfig, userConfigPath, tailwindConfigHash, configDependencies] =
@@ -102,7 +119,9 @@ export default function setupTrackingContext(configOrPath) {
           }
         }
       }
-
+      /**
+       * !创建sourcePath context上下文
+       */
       let [context, , mTimesToCommit] = getContext(
         root,
         result,

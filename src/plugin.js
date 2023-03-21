@@ -3,7 +3,7 @@ import processTailwindFeatures from './processTailwindFeatures'
 import { env } from './lib/sharedState'
 import { findAtConfigPath } from './lib/findAtConfigPath'
 
-module.exports = function tailwindcss(configOrPath) {
+module.exports = function tailwindcss (configOrPath) {
   return {
     postcssPlugin: 'tailwindcss',
     plugins: [
@@ -18,10 +18,13 @@ module.exports = function tailwindcss(configOrPath) {
         // path for the file being processed
         configOrPath = findAtConfigPath(root, result) ?? configOrPath
 
+        /**
+         * !创建postcss每次track的上下文
+         */
         let context = setupTrackingContext(configOrPath)
 
         if (root.type === 'document') {
-          let roots = root.nodes.filter((node) => node.type === 'root')
+          let roots = root.nodes.filter(node => node.type === 'root')
 
           for (const root of roots) {
             if (root.type === 'root') {
@@ -35,7 +38,7 @@ module.exports = function tailwindcss(configOrPath) {
         processTailwindFeatures(context)(root, result)
       },
       env.OXIDE &&
-        function lightningCssPlugin(_root, result) {
+        function lightningCssPlugin (_root, result) {
           let postcss = require('postcss')
           let lightningcss = require('lightningcss')
           let browserslist = require('browserslist')
@@ -61,10 +64,10 @@ module.exports = function tailwindcss(configOrPath) {
             })
 
             result.map = Object.assign(result.map ?? {}, {
-              toJSON() {
+              toJSON () {
                 return transformed.map.toJSON()
               },
-              toString() {
+              toString () {
                 return transformed.map.toString()
               },
             })

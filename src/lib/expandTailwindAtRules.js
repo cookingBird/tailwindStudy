@@ -13,11 +13,11 @@ const builtInExtractors = {
 }
 
 const builtInTransformers = {
-  DEFAULT: (content) => content,
-  svelte: (content) => content.replace(/(?:^|\s)class:/g, ' '),
+  DEFAULT: content => content,
+  svelte: content => content.replace(/(?:^|\s)class:/g, ' '),
 }
 
-function getExtractor(context, fileExtension) {
+function getExtractor (context, fileExtension) {
   let extractors = context.tailwindConfig.content.extract
 
   return (
@@ -28,7 +28,7 @@ function getExtractor(context, fileExtension) {
   )
 }
 
-function getTransformer(tailwindConfig, fileExtension) {
+function getTransformer (tailwindConfig, fileExtension) {
   let transformers = tailwindConfig.content.transform
 
   return (
@@ -44,7 +44,7 @@ let extractorCache = new WeakMap()
 // Scans template contents for possible classes. This is a hot path on initial build but
 // not too important for subsequent builds. The faster the better though — if we can speed
 // up these regexes by 50% that could cut initial build time by like 20%.
-function getClassCandidates(content, extractor, candidates, seen) {
+function getClassCandidates (content, extractor, candidates, seen) {
   if (!extractorCache.has(extractor)) {
     extractorCache.set(extractor, new LRU({ maxSize: 25000 }))
   }
@@ -62,7 +62,7 @@ function getClassCandidates(content, extractor, candidates, seen) {
         candidates.add(match)
       }
     } else {
-      let extractorMatches = extractor(line).filter((s) => s !== '!*')
+      let extractorMatches = extractor(line).filter(s => s !== '!*')
       let lineMatchesSet = new Set(extractorMatches)
 
       for (let match of lineMatchesSet) {
@@ -75,11 +75,11 @@ function getClassCandidates(content, extractor, candidates, seen) {
 }
 
 /**
- *
+ * @description 生成
  * @param {[import('./offsets.js').RuleOffset, import('postcss').Node][]} rules
  * @param {*} context
  */
-function buildStylesheet(rules, context) {
+function buildStylesheet (rules, context) {
   let sortedRules = context.offsets.sort(rules)
 
   let returnValue = {
@@ -97,8 +97,13 @@ function buildStylesheet(rules, context) {
   return returnValue
 }
 
-export default function expandTailwindAtRules(context) {
-  return (root) => {
+/**
+ * @description 根据tailwind指令生成对应的stylesheet
+ * @param {*} context
+ * @returns
+ */
+export default function expandTailwindAtRules (context) {
+  return root => {
     let layerNodes = {
       base: null,
       components: null,
@@ -106,7 +111,7 @@ export default function expandTailwindAtRules(context) {
       variants: null,
     }
 
-    root.walkAtRules((rule) => {
+    root.walkAtRules(rule => {
       // Make sure this file contains Tailwind directives. If not, we can save
       // a lot of work and bail early. Also we don't have to register our touch
       // file as a dependency since the output of this CSS does not depend on
@@ -118,7 +123,7 @@ export default function expandTailwindAtRules(context) {
       }
     })
 
-    if (Object.values(layerNodes).every((n) => n === null)) {
+    if (Object.values(layerNodes).every(n => n === null)) {
       return root
     }
 
@@ -222,7 +227,7 @@ export default function expandTailwindAtRules(context) {
     }
 
     // We do post-filtering to not alter the emitted order of the variants
-    const variantNodes = Array.from(screenNodes).filter((node) => {
+    const variantNodes = Array.from(screenNodes).filter(node => {
       const parentLayer = node.raws.tailwind?.parentLayer
 
       if (parentLayer === 'components') {
@@ -253,7 +258,7 @@ export default function expandTailwindAtRules(context) {
 
     // If we've got a utility layer and no utilities are generated there's likely something wrong
     const hasUtilityVariants = variantNodes.some(
-      (node) => node.raws.tailwind?.parentLayer === 'utilities'
+      node => node.raws.tailwind?.parentLayer === 'utilities'
     )
 
     if (layerNodes.utilities && utilityNodes.size === 0 && !hasUtilityVariants) {
@@ -274,7 +279,7 @@ export default function expandTailwindAtRules(context) {
     context.changedContent = []
 
     // Cleanup any leftover @layer atrules
-    root.walkAtRules('layer', (rule) => {
+    root.walkAtRules('layer', rule => {
       if (Object.keys(layerNodes).includes(rule.params)) {
         rule.remove()
       }
